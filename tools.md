@@ -330,6 +330,31 @@ After configuring, restart V2Ray and httpd.
 systemctl restart v2ray httpd
 ```
 
+## Client's choice
+
+For shadowsocks and V2Ray there are many clients that can be used. For PC, I recommend QV2Ray, although the project has stopped maintenance, but this is currently the best client with GUI. For iOS devices, shadowrocket purchased from the US store is the best option.
+
+### Windows
+
+- Qv2ray https://github.com/Qv2ray/Qv2ray
+- clash https://github.com/Dreamacro/clash
+- V2rayN https://github.com/2dust/v2rayN
+
+### Linux
+
+- Qv2ray https://github.com/Qv2ray/Qv2ray
+- clash https://github.com/Dreamacro/clash
+- v2rayA https://github.com/v2rayA/v2rayA
+
+### Android
+
+- SagerNet https://github.com/SagerNet/SagerNet
+- v2rayNG https://github.com/2dust/v2rayNG
+
+### iOS
+
+- Shadowrocket https://apps.apple.com/us/app/shadowrocket/id932747118
+
 ## Afterword
 
 随着GFW与“上网工具”的对抗，“上网工具”也有版本的迭代。从最开始的ShadowSock到后来的V2Ray VMess，目前更高级的工具包括V2Ray VLESS XTLS和trojan。目前使用的V2Ray即将更新v5版本。“上网工具”的及时更新与迭代时很有必要的。GFW可以看成一个黑盒，具有某些特征的流量将被阻碍，但目前并不清楚它的“工具”识别原理，现在的做法是将上网流量用tls伪装成对自己域名的访问。
