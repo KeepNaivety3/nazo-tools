@@ -246,9 +246,9 @@ firewall-cmd --reload
 
 ```shell
 mkdir -p /etc/pki/httpd/private
-~/.acme.sh/acme.sh --issue -d jp2.keepnaive233.network --standalone -k ec-256
-~/.acme.sh/acme.sh --renew -d jp2.keepnaive233.network --force --ecc
-~/.acme.sh/acme.sh --installcert -d jp2.keepnaive233.network --fullchainpath /etc/pki/httpd/server.crt --keypath /etc/pki/httpd/private/server.key --ecc
+~/.acme.sh/acme.sh --issue -d example.com --standalone -k ec-256
+~/.acme.sh/acme.sh --renew -d example.com --force --ecc
+~/.acme.sh/acme.sh --installcert -d example.com --fullchainpath /etc/pki/httpd/server.crt --keypath /etc/pki/httpd/private/server.key --ecc
 ```
 
 ### Configure Certs in Apache
