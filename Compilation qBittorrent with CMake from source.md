@@ -12,6 +12,7 @@ This guide is written for CentOS, but the process should be similar for other RH
 ```bash
 yum install epel-release -y
 yum install autoconf automake gcc gcc-c++ git glib2 glibc gmp gnutls libblkid libcap libffi libgcc libgcrypt libgpg-error libicu libidn2 libmount libselinux libstdc++ libtasn1 libtool libunistring libuuid lz4-libs make nettle openssl-devel openssl-libs p11-kit pcre pcre2 qt5-qtbase systemd-libs tar wget xz-libs zlib -y
+yum install qt5-linguist qt5-qttools-devel qt5-qtsvg-devel -y
 yum install screen -y
 ```
 
@@ -39,6 +40,8 @@ cd boost_1_78_0
 ./bootstrap.sh --prefix=${DIR_BOOST}
 ./b2 install --prefix=${DIR_BOOST} --with=all -j$(( $(nproc) - 1 ))
 ```
+
+Notice: ``-j$(( $(nproc) - 1 ))`` is a option to use multi-threaded compilation via ``$(nproc)``, it will report an error if your computer has only one core.
 
 ### Libtorrent
 
