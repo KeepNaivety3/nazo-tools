@@ -3,8 +3,6 @@
 This how-to will guide you though the compilation of qBittorrent and `` libtorrent-rasterbar ``.
 This guide is written for CentOS, but the process should be similar for other RHEL distributions.
 
-[TOC]
-
 ## Required dependencies
 
 ### General required dependencies
