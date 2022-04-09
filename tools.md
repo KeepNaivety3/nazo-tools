@@ -1,7 +1,5 @@
 # 搭建一个WebSocket + TLS + Web的V2Fly服务器
 
-[TOC]
-
 ## 服务器的选择
 
 由于每个地区的网络服务商与网络状况都由区别，这里只推荐几个使用过的比较好用的服务器：
@@ -98,7 +96,7 @@ sysctl -n net.ipv4.tcp_congestion_control
 lsmod | grep bbr
 ```
 
-### Install cockpit for easy server management
+### (Optional) Install cockpit for easy server management
 
 Install cockpit
 
@@ -265,10 +263,12 @@ SSLCertificateKeyFile /etc/pki/httpd/private/server.key
 
 Edit ``/etc/httpd/conf.d/ssl.conf``
 
+Add the following lines
+
 ```
 <VirtualHost *:80>
     <IfModule alias_module>
-        Redirect permanent / https://keepnaive233.network/
+        Redirect permanent / https://example.com/
     </IfModule>
 </VirtualHost>
 ```
@@ -276,15 +276,13 @@ Edit ``/etc/httpd/conf.d/ssl.conf``
 ### Configure Reverse Proxy to V2Ray in httpd
 
 Edit ``/etc/httpd/conf.d/ssl.conf``
-Add the following in ``<VirtualHost>``
+Add the following in ``<VirtualHost _default_:443>``
 
 ```
-<Location "/ray/">
-	ProxyPass "/ray/" "ws://127.0.0.1:10000/ray/"
-	ProxyAddHeaders Off
-	ProxyPreserveHost On
-	RequestHeader append X-Forwarded-For %{REMOTE_ADDR}s
-</Location>
+ProxyPass "/ray/" "ws://127.0.0.1:10000/ray/"
+ProxyAddHeaders Off
+ProxyPreserveHost On
+RequestHeader append X-Forwarded-For %{REMOTE_ADDR}s
 ```
 
 ### Configure the V2Ray Server
@@ -357,4 +355,3 @@ For shadowsocks and V2Ray there are many clients that can be used. For PC, I rec
 
 ## Afterword
 
-随着GFW与“上网工具”的对抗，“上网工具”也有版本的迭代。从最开始的ShadowSock到后来的V2Ray VMess，目前更高级的工具包括V2Ray VLESS XTLS和trojan。目前使用的V2Ray即将更新v5版本。“上网工具”的及时更新与迭代时很有必要的。GFW可以看成一个黑盒，具有某些特征的流量将被阻碍，但目前并不清楚它的“工具”识别原理，现在的做法是将上网流量用tls伪装成对自己域名的访问。
