@@ -98,6 +98,26 @@ Username: admin
 Password: adminadmin
 ```
 
+## Control qBittorrent via systemctl
+
+In order to control qBittorrent using systemctl, a .service file needs to be written
+```bash
+vi /etc/systemd/system/qbittorrent.service
+```
+
+```
+[Unit]
+Description=qbittorrent torrent server
+
+[Service]
+User=root
+ExecStart=/usr/bin/qbittorrent-nox
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target
+```
+
 ## Troubleshooting
 
 If are you facing a problem like this:
