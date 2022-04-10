@@ -116,6 +116,15 @@ Restart=on-abort
 WantedBy=multi-user.target
 ```
 
+## Add ProxyPass in Apache
+
+It is convenient to use port 8080 directly. In order to use ssl certificate and better security, a reverse proxy is used here.
+
+```
+ProxyPass "/qbt/" "http://127.0.0.1:8080/"
+ProxyPassReverse "/qbt/" "http://127.0.0.1:8080/"
+```
+
 ## Troubleshooting
 
 If are you facing a problem like this:
