@@ -2,6 +2,14 @@
 
 First of all, to generate wordcloud, u need to install some necessary library: ``jieba``, ``wordcloud``. Then, through the QQ message manager, download the message to the local. Modify the file location in the code, the word cloud image will be generated to the selected position.
 
+- ``***massage adress***`` is the location of the message.
+
+- ``***text adress***`` is the message segment which processed.
+
+- ``***mask_image adress***`` can be used to modify the style of the word cloud.
+
+- ``***wordcloud adress***`` is the address of the generated word cloud.
+
 ```python
 import jieba
 import wordcloud
