@@ -58,7 +58,7 @@ make install
 ln -s /usr/lib/pkgconfig/libtorrent-rasterbar.pc /usr/lib64/pkgconfig/libtorrent-rasterbar.pc
 ```
 
-Last command was missing and on 64bit systems will fail without it.Here is the error information:
+Last command was missing and on 64bit systems will fail without it. Here is the error information:
 
 ```
 checking for libtorrent... no
