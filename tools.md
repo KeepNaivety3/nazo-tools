@@ -59,8 +59,8 @@ rpm -iv --replacepkgs https://vault.centos.org/8.0.1905/BaseOS/x86_64/os/Package
 sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
 sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
 
-dnf --disablerepo '*' --enablerepo extras swap centos-linux-repos centos-stream-repos
 dnf distro-sync
+dnf --disablerepo '*' --enablerepo extras swap centos-linux-repos centos-stream-repos
 ```
 
 ### Enable yum-plugin-fastestmirror plugin
