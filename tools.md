@@ -1,6 +1,16 @@
 # Complete Process For Setuping a V2Fly Server with TLS + WebSocket
 
-## Some ohoice of server provider
+## Something need to be prepared
+
+- a server with "freedom" Internet connction
+- a domain
+- Some basic operation and maintenance technologies
+- ability to debug
+- Read more documents if you need~
+
+If you one of lack the above conditions, I will list some options below
+
+### Some ohoice of server provider
 
 Since the Internet service providers and network conditions in each region are different, here are only a few recommended servers that have been used:
 
@@ -39,7 +49,7 @@ Since the Internet service providers and network conditions in each region are d
 	- I haven't used it, but the CN2 GIA has good reviews
 	- Only support annual payment
 
-## Domain name purchase
+### Domain name purchase
 
 Considering the reasons for the need for filing, domestic domain name buyers are not recommended. I recommend namecheap, although not cheap at all.
 
@@ -206,7 +216,7 @@ RequestHeader append X-Forwarded-For %{REMOTE_ADDR}s
 
 ### Configure the V2Ray Server
 
-Although v2fly has released the v5 standard, the json format of the v5 standard is not enabled by default, so the past v4 format is used here。
+Although v2fly has released the v5 standard, the json format of the v5 standard is not enabled by default, so the past v4 format is used here.
 
 Edit ``/usr/local/etc/v2ray/config.json``
 
