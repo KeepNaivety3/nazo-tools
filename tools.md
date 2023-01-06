@@ -239,7 +239,7 @@ Edit ``/usr/local/etc/v2ray/config.json``
       "streamSettings": {
         "transport": "ws",
         "transportSettings": {
-          "path": "/ray/",
+          "path": "/ray/"
         },
         "security": "none",
         "securitySettings": {}
@@ -249,7 +249,7 @@ Edit ``/usr/local/etc/v2ray/config.json``
   "outbounds": [
     {
         "protocol": "freedom",
-        "settings": {},
+        "settings": {}
       }
   ]
 }
