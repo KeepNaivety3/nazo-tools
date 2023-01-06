@@ -224,27 +224,21 @@ Edit ``/usr/local/etc/v2ray/config.json``
 {
   "inbounds": [
     {
+      "port": 10000,
+      "listen":"127.0.0.1",
       "protocol": "vmess",
       "settings": {
         "clients": [
           {
-            "id": "********-****-****-****-************",
-            "alterId": 0,
-            "security": "aes-128-gcm"
+            "id": "********-****-****-****-************"
           }
         ]
       },
-      "port": "10000",
-      "listen": "127.0.0.1",
-      "tag": "",
-      "sniffing": {},
       "streamSettings": {
-        "transport": "ws",
-        "transportSettings": {
-          "path": "/ray/"
-        },
-        "security": "none",
-        "securitySettings": {}
+        "network": "ws",
+        "wsSettings": {
+        "path": "/ray/"
+        }
       }
     }
   ],
@@ -255,7 +249,6 @@ Edit ``/usr/local/etc/v2ray/config.json``
     }
   ]
 }
-
 ```
 
 For privacy, I hided the UUID. You may generate yours by [Online UUID Generator](https://www.uuidgenerator.net/).
