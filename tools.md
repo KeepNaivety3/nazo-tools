@@ -228,7 +228,9 @@ Edit ``/usr/local/etc/v2ray/config.json``
       "settings": {
         "clients": [
           {
-            "id": "********-****-****-****-************"
+            "id": "********-****-****-****-************",
+            "alterId": 0,
+            "security": "aes-128-gcm"
           }
         ]
       },
@@ -248,9 +250,9 @@ Edit ``/usr/local/etc/v2ray/config.json``
   ],
   "outbounds": [
     {
-        "protocol": "freedom",
-        "settings": {}
-      }
+      "protocol": "freedom",
+      "settings": {}
+    }
   ]
 }
 
