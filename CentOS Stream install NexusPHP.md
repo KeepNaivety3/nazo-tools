@@ -4,21 +4,33 @@
 
 From the documentation, twe have some installation environments that need to be prepared. 
 
-> - PHP: `8.0`，必须扩展：`bcmath, ctype, curl, fileinfo, json, mbstring, openssl, pdo_mysql, tokenizer, xml, mysqli, gd, redis, pcntl, sockets, posix, gmp, opcache`
-> - Mysql: 推荐 `5.7` 最新版或以上
-> - Redis: `2.6.12` 或以上
+> - PHP: `8.0`, must have extensions: `bcmath, ctype, curl, fileinfo, json, mbstring, openssl, pdo_mysql, tokenizer, xml, mysqli, gd, redis, pcntl, sockets, posix, gmp, opcache`
+> - Mysql: `5.7` latest version or above is recommended
+> - Redis: `2.6.12` or above
 
 ### 1.1 Install MySQL
 
 ```bash
-$ yum install -y https://dev.mysql.com/get/mysql80-community-release-el8-4.noarch.rpm
-$ yum install -y mysql-server
+# Install MySQL
+yum install -y https://dev.mysql.com/get/mysql80-community-release-el8-4.noarch.rpm
+yum install -y mysql-server
+
+# Enable and start mysql service
+systemclt enable --now mysqld.service
+
+# Setup for mysql
+# just set a password and choose the default option.
+mysql_secure_installation
 ```
 
 ### 1.2 Install Redis
 
 ```bash
-$ yum install -y redis
+# Install redis
+yum install -y redis
+
+# Enable and start redis service
+systemctl enable --now redis.service
 ```
 
 ### 1.3 Install PHP
@@ -31,10 +43,10 @@ The reason why the yum repo source software version is relatively backward may b
 
 ```bash
 # Install Remi's RPM repository
-$ yum install -y https://rpms.remirepo.net/enterprise/remi-release-8.rpm
+yum install -y https://rpms.remirepo.net/enterprise/remi-release-8.rpm
 
 # List of the PHP module
-$ yum module list php
+yum module list php
 CentOS Stream 8 - AppStream
 Name               Stream                    Profiles                                Summary                            
 php                7.2 [d]                   common [d], devel, minimal              PHP scripting language             
@@ -54,13 +66,13 @@ php                remi-8.2                  common [d], devel, minimal         
 Hint: [d]efault, [e]nabled, [x]disabled, [i]nstalled
 
 # Change the default module to remi-8.0
-$ yum module enable php:remi-8.2
+yum module enable php:remi-8.2
 
 # Install PHP8.0
-$ yum install -y php
+yum install -y php
 
 # Install PHP extensions
-$ yum install -y php-bcmath php-common php-mbstring php-pdo php-mysqlnd php-xml php-gd php-pecl-redis5 php-cli php-process php-gmp php-opcache
+yum install -y php-bcmath php-common php-mbstring php-pdo php-mysqlnd php-xml php-gd php-pecl-redis5 php-cli php-process php-gmp php-opcache
 ```
 
 ## 2. Setup for NexusPHP
@@ -70,21 +82,29 @@ $ yum install -y php-bcmath php-common php-mbstring php-pdo php-mysqlnd php-xml 
 Clone xiaomlove/nexusphp and switch to the latest release tab before installing it, or just download the latest release. Be sure to switch to a release for installation when cloning. Do not use the latest development code!
 
 ```bash
-$ git clone -b 1.7 https://github.com/xiaomlove/nexusphp.git
+git clone -b 1.7 https://github.com/xiaomlove/nexusphp.git
 ```
 
 ### 2.2 Create a database
 
 First login to Mysql, create a new database, and choose utf8 + utf8_general_ci or utf8mb4 + utf8mb4_general_ci for the charset and sorting rules (collate). The latter supports storing emoji expressions, the former does not.
 
+```bash
+mysql -u root -p
+```
+
 ```mysql
-mysql> create database `nexusphp` default charset=utf8mb4 collate utf8mb4_general_ci;
+create database `nexusphp` default charset=utf8mb4 collate utf8mb4_general_ci;
 ```
 
 ### 2.3 Install Nginx
 
 ```bash
-$ yum install -y nginx
+# Install Nginx
+yum install -y nginx
+
+# Enable and start Nginx
+systemctl enable --now nginx.service
 ```
 
 ### 2.4 Configure the web server
@@ -114,7 +134,7 @@ server {
 
     location ~ \.php {
         # whichever is true
-        fastcgi_pass 127.0.0.1:9000; 
+        fastcgi_pass unix:/run/php-fpm/www.sock; 
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
         include fastcgi_params;
     }
