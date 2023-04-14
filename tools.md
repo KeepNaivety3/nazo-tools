@@ -1,6 +1,29 @@
 # Complete Process For Setuping a V2Fly Server with TLS + WebSocket
 
-## Something need to be prepared
+- [Complete Process For Setuping a V2Fly Server with TLS + WebSocket](#complete-process-for-setuping-a-v2fly-server-with-tls--websocket)
+  - [1. Something need to be prepared](#1-something-need-to-be-prepared)
+    - [1.1. Some choice of server provider](#11-some-choice-of-server-provider)
+    - [1.2. Some choice of domain provider](#12-some-choice-of-domain-provider)
+  - [2. Preparing for server setup](#2-preparing-for-server-setup)
+    - [2.1. Switch the yum repo from CentOS 8 to CentOS 8 Steam](#21-switch-the-yum-repo-from-centos-8-to-centos-8-steam)
+    - [2.2. Enable yum-plugin-fastestmirror plugin](#22-enable-yum-plugin-fastestmirror-plugin)
+    - [2.3. Update the System and install some necessary software](#23-update-the-system-and-install-some-necessary-software)
+    - [2.4. Enable Google BBR(Reboot is required to take effect)](#24-enable-google-bbrreboot-is-required-to-take-effect)
+    - [2.5. (Optional) Install cockpit for easy server management](#25-optional-install-cockpit-for-easy-server-management)
+  - [3.Install V2Fly via official script](#3install-v2fly-via-official-script)
+  - [4. Install and configure apache2](#4-install-and-configure-apache2)
+    - [4.1 Install apache2](#41-install-apache2)
+    - [4.2 Using acme.sh to install SSL cert](#42-using-acmesh-to-install-ssl-cert)
+    - [4.3 Install cert](#43-install-cert)
+    - [4.4. Configure certs in Apache](#44-configure-certs-in-apache)
+    - [4.5. Denies all http access and redirects to elsewhere](#45-denies-all-http-access-and-redirects-to-elsewhere)
+    - [4.6. Configure Reverse Proxy to V2Ray in httpd](#46-configure-reverse-proxy-to-v2ray-in-httpd)
+    - [4.7. Configure the V2Ray Server](#47-configure-the-v2ray-server)
+  - [5. Client's choice](#5-clients-choice)
+  - [6. Afterword](#6-afterword)
+  - [7. Citation](#7-citation)
+
+## 1. Something need to be prepared
 
 - a server with "freedom" Internet connction
 - a domain
@@ -10,52 +33,29 @@
 
 If you one of lack the above conditions, I will list some options below
 
-### Some ohoice of server provider
+### 1.1. Some choice of server provider
 
 Since the Internet service providers and network conditions in each region are different, here are only a few recommended servers that have been used:
 
-- Sugerhosts <https://www.sugarhosts.com/>
-	- Hong Kong server, lower latency for most regions
-	- 1 vCPU
-	- 1GB RAM
-	- 20GB storage
-	- 20Mbit/s Port (IPv6 is not supported)
-	- 300GB bandwidth
-	- CN¥99 MONTHLY, Support Alipay payment
+- [Vultr](https://www.vultr.com/)
+- [DigitalOccon](https://www.digitalocean.com/)
+- [Linode](https://www.linode.com/)
+- [Bandwagonhos](https://bandwagonhost.com/)
+- [Greebclould](https://greencloudvps.com/)
+- [V.PS](https://vps.hosting/)
+- [AWS](https://aws.amazon.com/)
+- [OCI](https://www.oracle.com/cloud/)
+- [Hetzner](https://www.hetzner.com/)
 
-- DigitalVM <https://digital-vm.com/>
-	- Storage VM and Power VM with japan node
-	- 1 vCPU / 2 vCPU
-	- 512MB RAM / 1GB RAM
-	- 30GB storage / 20GB storage
-	- 1Gbit/s Port / 10Gbit/s Port
-	- 5TB bandwidth / 20TB bandwidth
-	- \$8 MONTHLY / \$13 MONTHLY,  Support Alipay payment
+### 1.2. Some choice of domain provider
 
-- Greebclould <https://greencloudvps.com/>
-	- Japan SSD KVM VPS
-	- 1 vCPU
-	- 1GB RAM
-	- 15GB storage
-	- 1Gbit/s Port
-	- 1TB bandwidth
-	- \$6 MONTHLY, Support Alipay payment
+Considering the usage of domain, Chinese mainland domain provider are not recommended. I recommend NameCheap, although not cheap at all. Of course, in addition to NameCheap, there are options such as NameSilo, GoDaddy, etc.
 
-- Vultr <https://www.vultr.com/>
-	- \$6 MONTHLY
-	- The configuration is similar, but it will be blocked by GFW in "special periods"
+## 2. Preparing for server setup
 
-- 搬瓦工 <https://bandwagonhost.com/>
-	- I haven't used it, but the CN2 GIA has good reviews
-	- Only support annual payment
+Here I use CentOS 9 Stream as the operating system of the server. Some server providers' linux distribution mirrors are not updated and are only provided up to CentOS 8.
 
-### Domain name purchase
-
-Considering the reasons for the need for filing, domestic domain name buyers are not recommended. I recommend namecheap, although not cheap at all.
-
-## Preparing for server setup
-
-### Switch the yum repo to CentOS Steam
+### 2.1. Switch the yum repo from CentOS 8 to CentOS 8 Steam
 
 CentOS Linux 8 will reach End Of Life (EOL) on December 31st, 2021.  The CentOS Linux 8 packages have been removed from the mirrors. So you need to switch the yum repo to CentOS Steam
 
@@ -70,7 +70,7 @@ dnf distro-sync
 dnf --disablerepo '*' --enablerepo extras swap centos-linux-repos centos-stream-repos
 ```
 
-### Enable yum-plugin-fastestmirror plugin
+### 2.2. Enable yum-plugin-fastestmirror plugin
 
 Add the following to ``/etc/dnf/dnf.conf``
 
@@ -79,15 +79,15 @@ fastestmirror=1
 max_parallel_downloads=8
 ```
 
-### Update the System and install some necessary software
+### 2.3. Update the System and install some necessary software
 
 ```shell
 yum update -y
 yum install epel-release -y
-yum install vim nano htop git -y
+yum install vim nano htop git wget unzip -y
 ```
 
-### Enable Google BBR(Reboot is required to take effect)
+### 2.4. Enable Google BBR(Reboot is required to take effect)
 
 BBR ("Bottleneck Bandwidth and Round-trip propagation time") is a new congestion control algorithm developed at Google. Congestion control algorithms — running inside every computer, phone or tablet connected to a network — that decide how fast to send data.
 
@@ -103,17 +103,12 @@ sysctl -n net.ipv4.tcp_congestion_control
 lsmod | grep bbr
 ```
 
-### (Optional) Install cockpit for easy server management
+### 2.5. (Optional) Install cockpit for easy server management
 
-Install cockpit
+Install and enable cockpit
 
 ```shell
 yum install cockpit -y
-```
-
-Enable cockpit
-
-```shell
 systemctl enable --now cockpit.socket
 ```
 
@@ -124,7 +119,7 @@ sudo firewall-cmd --permanent --zone=public --add-service=cockpit
 sudo firewall-cmd --reload
 ```
 
-## Install V2Fly via official script
+## 3.Install V2Fly via official script
 
 > Bash script for installing V2Ray in operating systems such as Debian / CentOS / Fedora / openSUSE that support systemd
 
@@ -135,16 +130,16 @@ bash <(curl -L https://raw.githubusercontent.com/v2fly/fhs-install-v2ray/master/
 systemctl enable --now v2ray
 ```
 
-## Install and configure apache2
+## 4. Install and configure apache2
 
-### Install apache2
+### 4.1 Install apache2
 
 ```shell
 yum install httpd mod_ssl openssl -y
 systemctl enable httpd
 ```
 
-### Using acme.sh to install SSL cert
+### 4.2 Using acme.sh to install SSL cert
 
 In this tutorial we install cert in default location. Firstly, make directories and install acme.sh
 
@@ -152,17 +147,20 @@ In this tutorial we install cert in default location. Firstly, make directories 
 yum install tar socat -y
 curl https://get.acme.sh | sh
 ```
+
 Then we can use acme.sh to issue and renew certs automatically.
 
-### Install cert
+### 4.3 Install cert
 
-~~Using ZeroSSL.com CA need register. ZeroSSL doesn't have rate limits. One can issue unlimited TLS/SSL certificate valid for 90 days (ref).~~
+The default certificate issuer of the acme.sh script, ZeroSSL, is not easy to use, and needs to be switched to Let's Encrypt.
 
 ```shell
-~/.acme.sh/acme.sh --register-account  -m myemail@example.com
+~/.acme.sh/acme.sh --register-account -m your-email-adress@example.com
 ~/.acme.sh/acme.sh --set-default-ca --server letsencrypt
 ```
-Open port 80/443
+
+Open port 80/443 for Apache
+
 ```shell
 firewall-cmd --permanent --add-port=80/tcp
 firewall-cmd --permanent --add-port=443/tcp
@@ -171,41 +169,44 @@ firewall-cmd --permanent --add-port=443/udp
 firewall-cmd --reload
 ```
 
+Run the script to get cert file
+
 ```shell
 mkdir -p /etc/pki/httpd/private
-~/.acme.sh/acme.sh --issue -d example.com --standalone -k ec-256
-~/.acme.sh/acme.sh --renew -d example.com --force --ecc
-~/.acme.sh/acme.sh --installcert -d example.com --fullchainpath /etc/pki/httpd/server.crt --keypath /etc/pki/httpd/private/server.key --ecc
+~/.acme.sh/acme.sh --issue -d your-domain.example.com --standalone -k ec-256
+~/.acme.sh/acme.sh --renew -d your-domain.example.com --force --ecc
+~/.acme.sh/acme.sh --installcert -d your-domain.example.com --fullchainpath /etc/pki/httpd/server.crt --keypath /etc/pki/httpd/private/server.key --ecc
 ```
 
-### Configure certs in Apache
+### 4.4. Configure certs in Apache
 
-Edit ``/etc/httpd/conf.d/ssl.conf``
-Change these following lines
+Edit ``/etc/httpd/conf.d/ssl.conf``, change these following lines
 
 ```
 SSLCertificateFile /etc/pki/httpd/server.crt
 SSLCertificateKeyFile /etc/pki/httpd/private/server.key
+
+SSLProtocol             all -SSLv3 -TLSv1 -TLSv1.1
+SSLCipherSuite          ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
+SSLHonorCipherOrder     off
+SSLSessionTickets       off
 ```
 
-### Redirect all http to https
+### 4.5. Denies all http access and redirects to elsewhere
 
-Edit ``/etc/httpd/conf.d/ssl.conf``
-
-Add the following lines at the end
+Edit ``/etc/httpd/conf.d/ssl.conf``, add the following lines at the end
 
 ```
 <VirtualHost *:80>
     <IfModule alias_module>
-        Redirect permanent / https://example.com/
+        Redirect permanent / "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
     </IfModule>
 </VirtualHost>
 ```
 
-### Configure Reverse Proxy to V2Ray in httpd
+### 4.6. Configure Reverse Proxy to V2Ray in httpd
 
-Edit ``/etc/httpd/conf.d/ssl.conf``
-Add the following in ``<VirtualHost _default_:443>``
+Edit ``/etc/httpd/conf.d/ssl.conf``, add the following in ``<VirtualHost _default_:443>``
 
 ```
 ProxyPass "/ray/" "ws://127.0.0.1:10000/ray/"
@@ -214,7 +215,18 @@ ProxyPreserveHost On
 RequestHeader append X-Forwarded-For %{REMOTE_ADDR}s
 ```
 
-### Configure the V2Ray Server
+The following is an example from the official tutorial, but I don't want to do this.
+
+```
+<Location "/ray/">
+  ProxyPass ws://127.0.0.1:10000/ray/ upgrade=WebSocket
+  ProxyAddHeaders Off
+  ProxyPreserveHost On
+  RequestHeader append X-Forwarded-For %{REMOTE_ADDR}s
+</Location>
+```
+
+### 4.7. Configure the V2Ray Server
 
 Although v2fly has released the v5 standard, the json format of the v5 standard is not enabled by default, so the past v4 format is used here.
 
@@ -259,25 +271,37 @@ After configuring, restart V2Ray and httpd.
 systemctl restart v2ray httpd
 ```
 
-## Client's choice(WIP)
+## 5. Client's choice
 
-For shadowsocks and V2Ray there are many clients that can be used. For PC, I recommend QV2Ray, although the project has stopped maintenance, but this is currently the best client with GUI. For iOS devices, shadowrocket purchased from the US store is the best option.
+For shadowsocks and V2Ray there are many clients that can be used. For PC, I recommend QV2ray, although the project has stopped maintenance, but this is currently the best client with GUI. For iOS devices, shadowrocket purchased from the US store is the best option.
 
-### Windows
+- Windows
+  - [Qv2ray](https://github.com/Qv2ray/Qv2ray)
+  - [Clash](https://github.com/Dreamacro/clash)
+  - [V2rayN](https://github.com/2dust/v2rayN)
+- Linux
+  - [Qv2ray](https://github.com/Qv2ray/Qv2ray)
+  - [Clash](https://github.com/Dreamacro/clash)
+- iOS
+  - [Shadowrocket](https://apps.apple.com/us/app/shadowrocket/id932747118)
 
-- Qv2ray https://github.com/Qv2ray/Qv2ray
-- clash https://github.com/Dreamacro/clash
-- V2rayN https://github.com/2dust/v2rayN
+Simple of a V2ray Subscribe link format
 
-### Linux
+```
+vmess://eyJhZGQiOiJzaW1wbGUuY29tIiwiYWlkIjowLCJob3N0IjoiIiwiaWQiOiIwMTdmZTZhNy1kM2E5LTQyMGQtOTljNS1lMDQzMGIxZmJiNzEiLCJuZXQiOiJ3cyIsInBhdGgiOiIvcmF5LyIsInBvcnQiOjQ0MywicHMiOiJ2bWVzc0BzaW1wbGUuY29tOjQ0MyIsInNjeSI6ImF1dG8iLCJzbmkiOiIiLCJ0bHMiOiJ0bHMiLCJ0eXBlIjoibm9uZSIsInYiOjJ9
+```
 
-- Qv2ray https://github.com/Qv2ray/Qv2ray
-- clash https://github.com/Dreamacro/clash
+Simple of a Clash yaml file format
 
-### iOS
+```
+(WIP)
+```
 
-- Shadowrocket https://apps.apple.com/us/app/shadowrocket/id932747118
+## 6. Afterword
 
-## Afterword
+As GFWs and the tools to fight them continue to evolve, the "method" is not static. But now "vmess+ws+tls" is the safest. Of course, there are more radical "methods" such as trojan, vless, xtls, but in my opinion these "methods" still need to be continuously improved. At the same time, I observed that there are still a large number of users using ShadowSocks, and the old "method" is not unusable, but has become unstable.
 
-WIP
+## 7. Citation
+
+1. [collection](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
+2. (WIP)

@@ -16,7 +16,7 @@ yum install -y https://dev.mysql.com/get/mysql80-community-release-el8-4.noarch.
 yum install -y mysql-server
 
 # Enable and start mysql service
-systemclt enable --now mysqld.service
+systemctl enable --now mysqld.service
 
 # Setup for mysql
 # just set a password and choose the default option.
@@ -66,13 +66,13 @@ php                remi-8.2                  common [d], devel, minimal         
 Hint: [d]efault, [e]nabled, [x]disabled, [i]nstalled
 
 # Change the default module to remi-8.0
-yum module enable php:remi-8.2
+yum module enable -y php:remi-8.2
 
 # Install PHP8.0
 yum install -y php
 
 # Install PHP extensions
-yum install -y php-bcmath php-common php-mbstring php-pdo php-mysqlnd php-xml php-gd php-pecl-redis5 php-cli php-process php-gmp php-opcache
+yum install -y php-bcmath php-common php-mbstring php-pdo php-mysqlnd php-xml php-gd php-pecl-redis5 php-cli php-process php-gmp php-opcache php-fpm
 ```
 
 ## 2. Setup for NexusPHP
@@ -82,7 +82,10 @@ yum install -y php-bcmath php-common php-mbstring php-pdo php-mysqlnd php-xml ph
 Clone xiaomlove/nexusphp and switch to the latest release tab before installing it, or just download the latest release. Be sure to switch to a release for installation when cloning. Do not use the latest development code!
 
 ```bash
-git clone -b 1.7 https://github.com/xiaomlove/nexusphp.git
+cd /SOMEWHERE/PATH/NPHP
+wget https://github.com/xiaomlove/nexusphp/archive/refs/tags/v1.7.33.zip
+unzip v1.7.33
+mv nexusphp-1.7.33/ nexusphp/
 ```
 
 ### 2.2 Create a database
@@ -105,20 +108,27 @@ yum install -y nginx
 
 # Enable and start Nginx
 systemctl enable --now nginx.service
+
+# Open 80/443 ports on firewalld
+firewall-cmd --permanent --add-port=80/tcp
+firewall-cmd --permanent --add-port=443/tcp
+firewall-cmd --permanent --add-port=80/udp
+firewall-cmd --permanent --add-port=443/udp
+firewall-cmd --reload
 ```
 
 ### 2.4 Configure the web server
 
-To enable https, you first have to prepare the certificate.
+To enable https, you first have to prepare the certificate. Then adding the following to `/etc/nginx/nginx.conf` in `http{ }`, and modify the appropriate keywords to match your server.
 
 ```nginx
 server {
     listen 443 ssl;
-    ssl_certificate /SOME/PATH/DOMAIN.pem;
-    ssl_certificate_key /SOME/PATH/DOMAIN.key;
+    ssl_certificate /SOMEWHERE/PATH/DOMAIN.pem;
+    ssl_certificate_key /SOMEWHERE/PATH/DOMAIN.key;
 
     # whichever is true
-    root /RUN_PATH; 
+    root /SOMEWHERE/PATH/NPHP/public; 
 
     server_name DOMAIN;
 
@@ -153,3 +163,44 @@ server {
 }
 ```
 
+After adding, `nginx -t` test for errors, no errors `nginx -s reload` restart to take effect.
+
+> trable shot
+> If you don... plz try adding
+> nginx: [emerg] could not build server_names_hash, you should increase server_names_hash_bucket_size: 32
+> server_names_hash_bucket_size  64;
+
+### 2.5 NexusPHP installation preparation
+
+The following is executed under `/SOMEWHERE/PATH/NPHP`.
+
+```bash
+# Install composer
+yum install -y composer
+
+composer update
+composer install
+
+cp -R nexus/Install/install public/
+chmod -R 0777 /SOMEWHERE/PATH/NPHP
+```
+
+After completing the above operations, you can directly visit your domain name for subsequent settings, if something go wrong, just reboot.
+
+please change the timezone in step2 Create .env
+TIMEZONE -> Asia/Shanghai
+
+else just click next
+
+after installing delete /public/install
+
+Fill in each step according to the actual situation, pay attention to choose the right time zone, otherwise the time is not correct, more likely the client can not report. Click Next until you are done.
+
+Create background task
+------Manual users look here------
+Create a timed task for user PHP_USER, execute: crontab -u PHP_USER -e, and enter the following in the opened interface.
+
+```crontab
+* * * * * cd ROOT_PATH && php artisan schedule:run >> /tmp/schedule_DOMAIN.log
+* * * * * cd ROOT_PATH && php include/cleanup_cli.php >> /tmp/cleanup_cli_DOMAIN.log
+```
