@@ -84,7 +84,7 @@ max_parallel_downloads=8
 ```shell
 yum update -y
 yum install epel-release -y
-yum install vim nano htop git wget unzip -y
+yum install vim nano htop git wget unzip tree net-tools bash-completion -y
 ```
 
 ### 2.4. Enable Google BBR(Reboot is required to take effect)
