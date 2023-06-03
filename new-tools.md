@@ -1,6 +1,30 @@
 # 如何充分利用你的VPS - 在完成本职工作的同时还能继续压榨
 
-[TOC]
+- [如何充分利用你的VPS - 在完成本职工作的同时还能继续压榨](#如何充分利用你的vps---在完成本职工作的同时还能继续压榨)
+  - [1. 准备工作](#1-准备工作)
+    - [1.1. 餐前小点](#11-餐前小点)
+    - [1.2. 拿到服务器后需要做的一点点小小的准备](#12-拿到服务器后需要做的一点点小小的准备)
+      - [1.2.1. 如果你的发行版过老，请切换到新的发行版吧](#121-如果你的发行版过老请切换到新的发行版吧)
+      - [1.2.2. 开启 yum-plugin-fastestmirror 插件](#122-开启-yum-plugin-fastestmirror-插件)
+      - [1.2.3. 更新软件包并安装必要的软件包](#123-更新软件包并安装必要的软件包)
+      - [1.2.4. 开启 Google BBR](#124-开启-google-bbr)
+      - [1.2.5 系统调优 TuneD](#125-系统调优-tuned)
+      - [1.2.6. 使用 chrony 校时](#126-使用-chrony-校时)
+      - [1.2.7. 对服务器宣布主权](#127-对服务器宣布主权)
+  - [2. 安装“正事”](#2-安装正事)
+    - [2.1. 安装 Nginx \& Podman](#21-安装-nginx--podman)
+    - [2.2. 安装 V2Fly](#22-安装-v2fly)
+  - [2.3. 安装证书](#23-安装证书)
+    - [2.4. 编辑 nginx 配置文件](#24-编辑-nginx-配置文件)
+    - [2.5. 额外的几个工作（选作）](#25-额外的几个工作选作)
+      - [2.5.1. 为你的 V2Fly 添加 ipv6 支持](#251-为你的-v2fly-添加-ipv6-支持)
+      - [2.5.2.  为你的容器设置开机自启](#252--为你的容器设置开机自启)
+  - [3. 继续压榨服务器的剩余价值](#3-继续压榨服务器的剩余价值)
+    - [3.1. 安装 Cockpit](#31-安装-cockpit)
+    - [3.2. 安装 Code-Server](#32-安装-code-server)
+    - [3.3. 安装 AList](#33-安装-alist)
+    - [3.4. 安装 qBittorrent-nox](#34-安装-qbittorrent-nox)
+    - [3.5. 使用 Nginx Autoindex 访问服务器文件](#35-使用-nginx-autoindex-访问服务器文件)
 
 ## 1. 准备工作
 
@@ -292,7 +316,7 @@ setsebool -P httpd_can_network_connect 1
 
 #### 2.5.1. 为你的 V2Fly 添加 ipv6 支持
 
-在 `podman `/`podman-compose` 中创建的默认网桥并不支持ipv6，需要手动添加
+在 `podman`/`podman-compose` 中创建的默认网桥并不支持ipv6，需要手动添加
 
 如果你是 `cni` 网桥，则修改 `/etc/cni/` 下的 xxx，否则修改 `/etc/containers/network/` 下的 `podman_default.json`
 
@@ -551,3 +575,5 @@ systenctl restart nginx
 开启 qBittorrent-nox 并重启 nginx 后，访问 `https://your-domain.example.com/qbt/` webui
 默认下载位置 `/data` 对应容器中 `/downloads`
 容器支持ipv6，因此我认为没有必要再转发多余端口，仅仅多一层NAT
+
+### 3.5. 使用 Nginx Autoindex 访问服务器文件
