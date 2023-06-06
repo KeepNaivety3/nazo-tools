@@ -14,7 +14,7 @@
   - [2. 安装“正事”](#2-安装正事)
     - [2.1. 安装 Nginx \& Podman](#21-安装-nginx--podman)
     - [2.2. 安装 V2Fly](#22-安装-v2fly)
-  - [2.3. 安装证书](#23-安装证书)
+    - [2.3. 安装证书](#23-安装证书)
     - [2.4. 编辑 nginx 配置文件](#24-编辑-nginx-配置文件)
     - [2.5. 额外的几个工作（选作）](#25-额外的几个工作选作)
       - [2.5.1. 为你的 V2Fly 添加 ipv6 支持](#251-为你的-v2fly-添加-ipv6-支持)
@@ -236,7 +236,7 @@ podman-compose up -d
 podman ps
 ```
 
-## 2.3. 安装证书
+### 2.3. 安装证书
 
 安装 acme.sh
 
@@ -372,7 +372,7 @@ systemctl enable --now podman.socket
 systemctl enable --now podman-auto-update.service
 ```
 
-但是如果你完成下面 `cockpit` 的安装了就仅需要登陆后点击开机自启动 `Podman`，去服务哪里开启 `Podman auto-update service` 即可
+但是如果你完成下面 `cockpit` 的安装了就仅需要登陆后点击开机自启动 `Podman`，去服务那里开启 `Podman auto-update service` 即可
 
 ## 3. 继续压榨服务器的剩余价值
 
@@ -528,6 +528,7 @@ systenctl restart nginx
 ```
 
 重启 AList 并重启 nginx 后，访问 `https://your-domain.example.com/alist/` web 文件系统
+添加了一个本地存储 `/data`，如果安装 qBittorrent 则其默认下载位置也为此，同时 Nginx Autoindex 也会将这个文件夹放出
 
 ### 3.4. 安装 qBittorrent-nox
 
@@ -577,3 +578,134 @@ systenctl restart nginx
 容器支持ipv6，因此我认为没有必要再转发多余端口，仅仅多一层NAT
 
 ### 3.5. 使用 Nginx Autoindex 访问服务器文件
+
+--- temp ---
+
+```
+server {
+	listen 443 ssl;
+	listen [::]:443 ssl;
+	
+	ssl_certificate       /etc/pki/nginx/server.crt;
+	ssl_certificate_key   /etc/pki/nginx/private/server.key;
+	ssl_session_timeout 1d;
+	ssl_session_cache shared:MozSSL:10m;
+	ssl_session_tickets off;
+	
+	ssl_protocols         TLSv1.2 TLSv1.3;
+	ssl_ciphers           ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
+	ssl_prefer_server_ciphers off;
+	
+	server_name           your-domain.example.com;
+	location /ray/ {
+		if ($http_upgrade != "websocket") {
+			return 404;
+		}
+		proxy_redirect off;
+		proxy_pass http://127.0.0.1:10000;
+		proxy_http_version 1.1;
+		proxy_set_header Upgrade $http_upgrade;
+		proxy_set_header Connection "upgrade";
+		proxy_set_header Host $host;  
+		proxy_set_header X-Real-IP $remote_addr;
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+	}
+	location /cockpit/ {
+		proxy_pass https://127.0.0.1:9090/cockpit/;
+		proxy_set_header Host $host;
+		proxy_set_header X-Forwarded-Proto $scheme;
+
+		proxy_http_version 1.1;
+		proxy_buffering off;
+		proxy_set_header Upgrade $http_upgrade;
+		proxy_set_header Connection "upgrade";
+		gzip off;
+	}
+	location /coder/ {
+		proxy_pass http://127.0.0.1:9001/;
+		proxy_set_header Host $host;
+		proxy_set_header Upgrade $http_upgrade;
+		proxy_set_header Connection upgrade;
+		proxy_set_header Accept-Encoding gzip;
+	}
+	location /alist/ {
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+		proxy_set_header X-Forwarded-Proto $scheme;
+		proxy_set_header Host $http_host;
+		proxy_set_header X-Real-IP $remote_addr;
+		proxy_set_header Range $http_range;
+		proxy_set_header If-Range $http_if_range;
+		proxy_redirect off;
+		proxy_pass http://127.0.0.1:5244/alist/;
+		client_max_body_size 100m;
+	}
+	location /qbt/ {
+		 proxy_pass         http://127.0.0.1:8080/;
+		 proxy_http_version 1.1;
+
+		 proxy_set_header   Host               127.0.0.1:8080;
+		 proxy_set_header   X-Forwarded-Host   $http_host;
+		 proxy_set_header   X-Forwarded-For    $remote_addr;
+
+		 proxy_cookie_path  /                  "/; Secure";
+	  }
+}
+```
+
+```
+services:
+  v2fly:
+    image: docker.io/v2fly/v2fly-core:latest
+    container_name: V2Fly
+    command: run -c /etc/v2fly/config.json
+    volumes:
+      - /podman/v2ray/config.json:/etc/v2fly/config.json:Z
+    ports:
+      - "127.0.0.1:10000:10000"
+    restart: always
+  
+  code-server:
+    image: docker.io/codercom/code-server:latest
+    container_name: Code-Server
+    user: 0:0
+    environment:
+      - USER=coder
+    volumes:
+      - /podman/code-server/config:/root/.config:Z
+      - /podman/code-server/plugin:/root/.local:Z
+      - /podman/code-space:/root/project:z
+      - /podman/container-compose.yml:/root/project/container-compose.yml:z
+    ports:
+      - "127.0.0.1:9001:8080"
+    restart: always
+
+  alist:
+    image: docker.io/xhofe/alist:latest
+    container_name: AList
+    volumes:
+      - /data:/data:z
+      - /podman/alist:/opt/alist/data:Z
+    ports:
+      - "127.0.0.1:5244:5244"
+    restart: always
+  
+  qbittorrent:
+    image: docker.io/qbittorrentofficial/qbittorrent-nox:4.4.5-1
+    container_name: qBittorrent-nox
+    user: 0:0
+    environment:
+      - QBT_EULA=true
+      - QBT_WEBUI_PORT=8080
+    tmpfs:
+      - /tmp
+    volumes:
+      - /podman/qbittorrent:/config:Z
+      - /data:/downloads:z
+    ports: 
+      - "127.0.0.1:8080:8080"
+    restart: always
+```
+
+```
+podman rmi $(podman images -a | grep "<none>" | awk '$1=="<none>" {print $3}')
+```
