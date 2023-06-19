@@ -25,6 +25,7 @@
     - [3.3. 安装 AList](#33-安装-alist)
     - [3.4. 安装 qBittorrent-nox](#34-安装-qbittorrent-nox)
     - [3.5. 使用 Nginx Autoindex 访问服务器文件](#35-使用-nginx-autoindex-访问服务器文件)
+  - [4. 客户端的选用](#4-客户端的选用)
 
 ## 1. 准备工作
 
@@ -95,7 +96,7 @@ yum install vim nano htop git wget unzip bash-completion net-tools tree -y
 
 > BBR ("Bottleneck Bandwidth and Round-trip propagation time") is a new congestion control algorithm developed at Google. Congestion control algorithms — running inside every computer, phone or tablet connected to a network — that decide how fast to send data.
 
-BBR 听说挺好用的，反正开了没坏处
+BBR 听说挺好用的，但是我个人而言开不开没区别，反正开了没坏处
 
 ```bash
 echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
@@ -386,7 +387,7 @@ systemctl enable --now podman-auto-update.service
 
 > Cockpit 项目是一个基于 Web 的图形界面，通过使用它，您可以执行系统管理任务，如检查和控制 systemd 服务、管理存储、配置网络、分析网络问题以及检查日志。
 
-反正红帽在 rhel9 中开始推这玩意了，确实可以简化轻度运维难度，安了总没错~
+反正红帽在 `RHEL9` 中开始推这玩意了，确实可以简化轻度运维难度，安了总没错~
 
 ```bash
 yum install cockpit cockpit-podman -y
@@ -419,7 +420,7 @@ location /cockpit/ {
 
 ```bash
 systemctl enable --now cockpit.socket
-systenctl restart nginx
+systemctl restart nginx
 ```
 
 开启 Cockpit 并重启 nginx 后，访问 `https://your-domain.example.com/cockpit/` 网页控制台
@@ -463,7 +464,7 @@ location /coder/ {
 
 ```bash
 cd /podman && podman-compose up -d
-systenctl restart nginx
+systemctl restart nginx
 ```
 
 开启 Code-Server 并重启 nginx 后，访问 `https://your-domain.example.com/coder/` web 编辑器
@@ -524,7 +525,7 @@ Successfully created the admin user and the initial password is: ********
 
 ```bash
 podman restart AList
-systenctl restart nginx
+systemctl restart nginx
 ```
 
 重启 AList 并重启 nginx 后，访问 `https://your-domain.example.com/alist/` web 文件系统
@@ -567,10 +568,11 @@ location /qbt/ {
 
   proxy_cookie_path  /                  "/; Secure";
 }
+```
 
 ```bash
 cd /podman && podman-compose up -d
-systenctl restart nginx
+systemctl restart nginx
 ```
 
 开启 qBittorrent-nox 并重启 nginx 后，访问 `https://your-domain.example.com/qbt/` webui
@@ -578,6 +580,36 @@ systenctl restart nginx
 容器支持ipv6，因此我认为没有必要再转发多余端口，仅仅多一层NAT
 
 ### 3.5. 使用 Nginx Autoindex 访问服务器文件
+
+## 4. 客户端的选用
+
+<Tool
+    url="https://github.com/Qv2ray/Qv2ray"
+    name="Qv2ray"
+    :platforms="['linux','win','mac']"
+    description="跨平台 V2Ray 客户端，支持 Linux、Windows、macOS，可通过插件系统支持 SSR / Trojan / Trojan-Go / NaiveProxy 等协议"
+/>
+
+<Tool
+    url="https://github.com/SagerNet/SagerNet"
+    name="SagerNet"
+    :platforms="['android']"
+    description="SagerNet 是一个基于 V2Ray 的 Android 通用代理应用。"
+/>
+
+<Tool
+    url="https://github.com/2dust/v2rayN"
+    name="V2rayN"
+    :platforms="['win']"
+    description="V2RayN 是一个基于 V2Ray 内核的 Windows 客户端。"
+/>
+
+<Tool
+    url="https://github.com/v2rayA/v2rayA"
+    name="v2rayA"
+    :platforms="['linux','win','mac']"
+    description="基于 web GUI 的跨平台 V2Ray 客户端，在 Linux 上支持全局透明代理，其他平台上支持系统代理。"
+/>
 
 --- temp ---
 
