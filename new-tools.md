@@ -2,15 +2,14 @@
 
 - [如何充分利用你的VPS - 在完成本职工作的同时还能继续压榨](#如何充分利用你的vps---在完成本职工作的同时还能继续压榨)
   - [1. 准备工作](#1-准备工作)
-    - [1.1. 餐前小点](#11-餐前小点)
-    - [1.2. 拿到服务器后需要做的一点点小小的准备](#12-拿到服务器后需要做的一点点小小的准备)
-      - [1.2.1. 如果你的发行版过老，请切换到新的发行版吧](#121-如果你的发行版过老请切换到新的发行版吧)
-      - [1.2.2. 开启 yum-plugin-fastestmirror 插件](#122-开启-yum-plugin-fastestmirror-插件)
+    - [1.1. 拿到服务器后需要做的一点点小小的准备](#11-拿到服务器后需要做的一点点小小的准备)
+      - [1.2.1. 从 CentOS 切换到滚动更新的 CentOS Stream (已过时)](#121-从-centos-切换到滚动更新的-centos-stream-已过时)
+      - [1.2.2. 开启 yum-plugin-fastestmirror 插件与多线程下载](#122-开启-yum-plugin-fastestmirror-插件与多线程下载)
       - [1.2.3. 更新软件包并安装必要的软件包](#123-更新软件包并安装必要的软件包)
       - [1.2.4. 开启 Google BBR](#124-开启-google-bbr)
       - [1.2.5 系统调优 TuneD](#125-系统调优-tuned)
       - [1.2.6. 使用 chrony 校时](#126-使用-chrony-校时)
-      - [1.2.7. 对服务器宣布主权](#127-对服务器宣布主权)
+      - [1.2.7. 修改服务器 Hostname](#127-修改服务器-hostname)
   - [2. 安装“正事”](#2-安装正事)
     - [2.1. 安装 Nginx \& Podman](#21-安装-nginx--podman)
     - [2.2. 安装 V2Fly](#22-安装-v2fly)
@@ -29,36 +28,13 @@
 
 ## 1. 准备工作
 
-### 1.1. 餐前小点
+### 1.1. 拿到服务器后需要做的一点点小小的准备
 
-所需要的技能
-  - 一个可以连接到互联网的服务器
-  - 一个域名
-  - 一些基础 Linux 操作技能及 debug 能力
-  - 提问的智慧
+这里我使用 CentOS Stream 9 作为服务器的操作系统，其他 Linux 发行版也能用。
 
-一些可供选择的服务器提供商
-  - 真正的大厂：可以无脑选择，就是偏贵
-    - [AWS](https://aws.amazon.com/)
-    - [GCP](https://cloud.google.com/)
-    - [Azure](https://azure.microsoft.com/)
-    - [OCI](https://www.oracle.com/cloud/)
-  - 小有名气的供应商：也可以选择，价格相较大厂便宜点
-    - [Vultr](https://www.vultr.com/)
-    - [DigitalOccon](https://www.digitalocean.com/)
-    - [Linode](https://www.linode.com/)
-    - [Greebclould](https://greencloudvps.com/)
-    - [Hetzner](https://www.hetzner.com/)
-    - [OVH](https://www.ovhcloud.com/)
-    - [Bandwagonhost](https://bandwagonhost.com/)
+#### 1.2.1. 从 CentOS 切换到滚动更新的 CentOS Stream (已过时)
 
-### 1.2. 拿到服务器后需要做的一点点小小的准备
-
-这里我使用 CentOS Stream 9 作为服务器的操作系统，其他 Linux 发行版也能用，但是我就喜欢 RH 系的。
-
-#### 1.2.1. 如果你的发行版过老，请切换到新的发行版吧
-
-如果你的服务器供应商没有最新的 CentOS Stream 9，也可以使用 CentOS Stream 8。但是对于 CentOS 8 用户，坑爹的红帽已经停止更新了，需要切换到 CentOS Stream 8。
+如果你的服务器供应商没有最新的 CentOS Stream 9，也可以使用 CentOS Stream 8。但是对于 CentOS 8 用户，红帽已经停止更新了，需要切换到 CentOS Stream 8。
 
 > CentOS Linux 8 will reach End Of Life (EOL) on December 31st, 2021. The CentOS Linux 8 packages have been removed from the mirrors.
 
@@ -73,13 +49,15 @@ dnf distro-sync
 dnf --disablerepo '*' --enablerepo extras swap centos-linux-repos centos-stream-repos
 ```
 
-#### 1.2.2. 开启 yum-plugin-fastestmirror 插件
+#### 1.2.2. 开启 yum-plugin-fastestmirror 插件与多线程下载
 
-为了节约几秒钟时间，请在 `/etc/dnf/dnf.conf` 中添加以下内容
+对于那些网络条件不太好的vps可以选择开启
+
+> The fastest mirror plugin is designed for use in repository configurations where you have more than 1 mirror in a repo configuration. It makes a connection to each mirror, timing the connection and then sorts the mirrors by fastest to slowest for use by yum.
 
 ```
-fastestmirror=1
-max_parallel_downloads=8
+echo "fastestmirror=1" >> /etc/dnf/dnf.conf
+echo "max_parallel_downloads=8" >> /etc/dnf/dnf.conf
 ```
 
 #### 1.2.3. 更新软件包并安装必要的软件包
@@ -88,15 +66,20 @@ max_parallel_downloads=8
 
 ```bash
 yum update -y
-yum install epel-release -y
-yum install vim nano htop git wget unzip bash-completion net-tools tree -y
+yum install -y epel-release
+yum install -y vim nano htop git wget unzip bash-completion net-tools tree
 ```
 
 #### 1.2.4. 开启 Google BBR
 
 > BBR ("Bottleneck Bandwidth and Round-trip propagation time") is a new congestion control algorithm developed at Google. Congestion control algorithms — running inside every computer, phone or tablet connected to a network — that decide how fast to send data.
 
-BBR 听说挺好用的，但是我个人而言开不开没区别，反正开了没坏处
+BBR 是谷歌开发的新型 TCP 拥塞控制算法。在此以前，互联网主要使用基于丢包的拥塞控制策略，只依靠丢失数据包的迹象作为减缓发送速率的信号。BBR尝试通过使用全新的拥塞控制来解决这个问题，它使用基于延迟而不是丢包作为决定发送速率的主要因素。对于高丢包率与高时延的网络环境，相较于 Linux 默认的 Cubic 算法具有更高的带宽。
+关于 Google BBR 的相关内容跟可以参考[来自谷歌的产品介绍](https://cloud.google.com/blog/products/networking/tcp-bbr-congestion-control-comes-to-gcp-your-internet-just-got-faster)和[这篇来自 AWS 的博客](https://aws.amazon.com/cn/blogs/china/talking-about-network-optimization-from-the-flow-control-algorithm/)。
+
+![谷歌 BBR 算法介绍图例](https://storage.googleapis.com/gweb-cloudblog-publish/original_images/GCP-TCP-BBR-animate-r32B252812529plh0.GIF)
+
+BBR 从 4.9 版本开始就已经出现在 Linux 内核之中，可以通过一个简单的 sysctl 命令来启用。
 
 ```bash
 echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
@@ -104,7 +87,7 @@ echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
 sysctl -p
 ```
 
-检验你的 BBR 是否真的开了
+校验你的 `BBR` 是否开启，如果返回的结果中带有 `bbr` 说明已经生效。
 
 ```
 sysctl -n net.ipv4.tcp_congestion_control
@@ -113,7 +96,7 @@ lsmod | grep bbr
 
 #### 1.2.5 系统调优 TuneD
 
-安装软件
+`tuned-adm` 是一个命令行工具，可让您在 Tuned 配置集间切换以提高特定用例的性能。它还提供了 `tuned-adm recommend` 子命令，用于评估您的系统并输出推荐的调优配置文件。具体内容可以参考[红帽给出的文档](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/9/html/monitoring_and_managing_system_status_and_performance/getting-started-with-tuned_monitoring-and-managing-system-status-and-performance)。
 
 ```bash
 yum install tuned -y
@@ -125,22 +108,44 @@ yum install tuned -y
 tuned-adm recommend
 ```
 
-应用指定配置文件，这里以我认为最好的 `throughput-performance` 为例
+应用指定配置文件，针对 vps 可以使用 `virtual-guest`，为 Red Hat Enterprise Linux 9 虚拟机和 VMWare 虚拟机设计的配置集基于 `throughput-performance` 配置集（除其他任务）减少了虚拟内存的交换性并增加磁盘预读值。它不会禁用磁盘障碍。它继承 `throughput-performance` 配置集，该配置集将 `energy_performance_preference` 和 `scaling_governor` 属性更改为 `performance` 配置集。
 
 ```bash
-tuned-adm profile throughput-performance
+tuned-adm profile virtual-guest
 ```
 
 #### 1.2.6. 使用 chrony 校时
+
+这次我们使用的 `VMess` 依赖于系统时间，请确保使用 `V2Ray` 的系统 UTC 时间误差在 90 秒之内，时区无关。
 
 ```bash
 yum install chrony -y
 systemctl enable --now chronyd
 ```
+修改 `/etc/chrony.conf` 为服务器添加额外的 `ntp` 服务器。
 
-添加ntp pool，自行修改
+这里提供几个可供参考的 ntp 服务器：
 
-#### 1.2.7. 对服务器宣布主权
+```
+# Google Public NTP
+server time1.google.com iburst
+server time2.google.com iburst
+server time3.google.com iburst
+server time4.google.com iburst
+
+# NTP Pool Project (以亚洲-中国为例)
+server 0.asia.pool.ntp.org
+server 1.asia.pool.ntp.org
+server 2.asia.pool.ntp.org
+server 3.asia.pool.ntp.org
+
+server 0.cn.pool.ntp.org
+server 1.cn.pool.ntp.org
+server 2.cn.pool.ntp.org
+server 3.cn.pool.ntp.org
+```
+
+#### 1.2.7. 修改服务器 Hostname
 
 都是你的服务器了，改个主机名吧~
 
@@ -151,8 +156,6 @@ hostnamectl hostname xxx
 ## 2. 安装“正事”
 
 这里选择是“终极配置”，虽然带宽损耗相较其他方法更高，但目前来看仍然是最稳定的。安装方法采用nginx反向代理+podman容器。为什么这么做呢，因为容器肯定是未来的大势所趋，至于 K8S 或者 K3S 我觉得有点 overkill 了。
-
-【这里后期补一张流程图】
 
 ### 2.1. 安装 Nginx & Podman
 
